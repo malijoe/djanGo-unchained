@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Malijoe/djanGo-unchained/utils"
+	"github.com/malijoe/djanGo-unchained/utils"
 )
 
 func TestIntegerField(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Malijoe/djanGo-unchained/fields"
+	"github.com/malijoe/djanGo-unchained/fields"
 )
 
 // testModel models.Model implementation for testing

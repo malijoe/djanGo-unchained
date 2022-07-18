@@ -1,4 +1,4 @@
-module github.com/Malijoe/djanGo-unchained
+module github.com/malijoe/djanGo-unchained
 
 go 1.17
 

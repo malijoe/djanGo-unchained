@@ -1,9 +1,9 @@
 package serializer
 
 import (
-	"github.com/Malijoe/djanGo-unchained/fields"
-	"github.com/Malijoe/djanGo-unchained/models"
 	"github.com/hashicorp/go-multierror"
+	"github.com/malijoe/djanGo-unchained/fields"
+	"github.com/malijoe/djanGo-unchained/models"
 )
 
 type FieldModifier func(field fields.Field) error

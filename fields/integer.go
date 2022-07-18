@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Malijoe/djanGo-unchained/utils"
+	"github.com/malijoe/djanGo-unchained/utils"
 )
 
 type integerField struct {

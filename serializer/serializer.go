@@ -3,8 +3,8 @@ package serializer
 import (
 	"encoding/json"
 
-	"github.com/Malijoe/djanGo-unchained/models"
 	"github.com/hashicorp/go-multierror"
+	"github.com/malijoe/djanGo-unchained/models"
 )
 
 type Serializer struct {

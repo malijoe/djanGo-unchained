@@ -1,6 +1,6 @@
 package models
 
-import "github.com/Malijoe/djanGo-unchained/fields"
+import "github.com/malijoe/djanGo-unchained/fields"
 
 type Model interface {
 	Init()

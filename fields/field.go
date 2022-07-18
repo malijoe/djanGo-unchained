@@ -1,8 +1,8 @@
 package fields
 
 import (
-	"github.com/Malijoe/djanGo-unchained/utils"
 	"github.com/hashicorp/go-multierror"
+	"github.com/malijoe/djanGo-unchained/utils"
 )
 
 type Internalizable interface {
