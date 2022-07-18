@@ -1,18 +1,19 @@
 package fields
 
 type Meta struct {
-	ReadOnly    bool             `json:"read_only"`
-	WriteOnly   bool             `json:"write_only"`
-	Required    bool             `json:"required"`
-	Default     interface{}      `json:"default"`
-	AllowNull   bool             `json:"allow_null"`
-	AllowBlank  bool             `json:"allow_blank"`
-	Source      string           `json:"source"`
-	Label       string           `json:"label"`
-	HelpText    string           `json:"help_text"`
-	Type        FieldType        `json:"type"`
-	PlaceHolder string           `json:"place_holder"`
-	Validators  []FieldValidator `json:"-"`
+	ReadOnly        bool             `json:"read_only"`
+	WriteOnly       bool             `json:"write_only"`
+	Required        bool             `json:"required"`
+	Default         interface{}      `json:"default"`
+	AllowNull       bool             `json:"allow_null"`
+	AllowBlank      bool             `json:"allow_blank"`
+	Source          string           `json:"source"`
+	Label           string           `json:"label"`
+	HelpText        string           `json:"help_text"`
+	Type            FieldType        `json:"type"`
+	PlaceHolder     string           `json:"place_holder"`
+	DependantFields []string         `json:"dependant_fields"`
+	Validators      []FieldValidator `json:"-"`
 }
 
 func (m Meta) HasDefault() (interface{}, bool) {

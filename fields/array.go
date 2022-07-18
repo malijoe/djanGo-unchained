@@ -52,17 +52,17 @@ func (f *stringArrayField) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 type StringArrayField struct {
-	stringArrayField
+	*stringArrayField
 	FullSerializer
 }
 
-func NewStringArrayField(meta Meta) *StringArrayField {
+func NewStringArrayField(meta Meta) StringArrayField {
 	field := stringArrayField{
 		Meta: meta,
 	}
 
-	return &StringArrayField{
-		stringArrayField: field,
+	return StringArrayField{
+		stringArrayField: &field,
 		FullSerializer:   DefaultFullSerializer(&field),
 	}
 }
@@ -125,17 +125,17 @@ func (f *objectArrayField) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 type ObjectArrayField struct {
-	objectArrayField
+	*objectArrayField
 	FullSerializer
 }
 
-func NewObjectArrayField(elem interface{}, meta Meta) *ObjectArrayField {
+func NewObjectArrayField(elem interface{}, meta Meta) ObjectArrayField {
 	field := objectArrayField{
 		Meta:     meta,
 		elemType: reflect.TypeOf(elem),
 	}
-	return &ObjectArrayField{
-		objectArrayField: field,
+	return ObjectArrayField{
+		objectArrayField: &field,
 		FullSerializer:   DefaultFullSerializer(&field),
 	}
 }

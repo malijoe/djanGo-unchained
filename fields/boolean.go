@@ -8,9 +8,7 @@ import (
 )
 
 // Bool a wrapper for sql.NullBool to marshal/unmarshal YAML and JSON input
-type Bool struct {
-	sql.NullBool
-}
+type Bool sql.NullBool
 
 func (b *Bool) unmarshal(unmarshal func(interface{}) error) error {
 	var ok bool
@@ -53,7 +51,7 @@ func (b Bool) MarshalYAML() (interface{}, error) {
 }
 
 type booleanField struct {
-	value Bool
+	value sql.NullBool
 	Meta
 }
 
@@ -62,15 +60,13 @@ func (f *booleanField) MetaData() *Meta {
 }
 
 func (f *booleanField) ToInternalValue(value interface{}) error {
-	f.value = Bool{}
+	f.value = sql.NullBool{}
 	if value != nil {
 		switch v := value.(type) {
 		case bool:
 			f.value.Valid = true
 			f.value.Bool = v
 		case sql.NullBool:
-			f.value.NullBool = v
-		case Bool:
 			f.value = v
 		case string:
 			b, err := strconv.ParseBool(v)
@@ -91,7 +87,7 @@ func (f booleanField) Internal() interface{} {
 }
 
 func (f booleanField) ToRepresentation() interface{} {
-	return f.value
+	return Bool(f.value)
 }
 
 func (f booleanField) Marshal() interface{} {

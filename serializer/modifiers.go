@@ -6,7 +6,7 @@ import (
 	"github.com/malijoe/djanGo-unchained/models"
 )
 
-type FieldModifier func(field fields.Field) error
+type FieldModifier func(field fields.Field, dependants ...fields.Field) error
 
 func ManageModelFields(model models.Model, fields []string, mod FieldModifier) error {
 	var errs error
@@ -19,7 +19,7 @@ func ManageModelFields(model models.Model, fields []string, mod FieldModifier) e
 	return errs
 }
 
-func SetFieldReadOnly(field fields.Field) error {
+func SetFieldReadOnly(field fields.Field, _ ...fields.Field) error {
 	if field != nil {
 		meta := field.MetaData()
 		meta.ReadOnly = true
@@ -27,7 +27,7 @@ func SetFieldReadOnly(field fields.Field) error {
 	return nil
 }
 
-func SetFieldWriteOnly(field fields.Field) error {
+func SetFieldWriteOnly(field fields.Field, _ ...fields.Field) error {
 	if field != nil {
 		meta := field.MetaData()
 		meta.WriteOnly = true

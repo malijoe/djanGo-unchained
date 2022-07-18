@@ -58,18 +58,18 @@ func (f *objectField) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 type ObjectField struct {
-	objectField
+	*objectField
 	FullSerializer
 }
 
-func NewObjectField(objType interface{}, meta Meta) *ObjectField {
+func NewObjectField(objType interface{}, meta Meta) ObjectField {
 	field := objectField{
 		Meta:    meta,
 		objType: reflect.TypeOf(objType),
 	}
 
-	return &ObjectField{
-		objectField:    field,
+	return ObjectField{
+		objectField:    &field,
 		FullSerializer: DefaultFullSerializer(&field),
 	}
 }
