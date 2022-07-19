@@ -80,7 +80,7 @@ func (f *objectArrayField) MetaData() *Meta {
 func (f *objectArrayField) ToInternalValue(value interface{}) error {
 	f.InternalValue = []interface{}{}
 	if value != nil {
-		v := reflect.ValueOf(value)
+		v := reflect.Indirect(reflect.ValueOf(value))
 		if !(v.Kind() == reflect.Array || v.Kind() == reflect.Slice) || v.Type().Elem() != f.ElemType {
 			return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
 		}
