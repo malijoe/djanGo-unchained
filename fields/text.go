@@ -3,7 +3,7 @@ package fields
 import "fmt"
 
 type textField struct {
-	value string
+	InternalValue string
 	Meta
 }
 
@@ -12,13 +12,13 @@ func (f *textField) MetaData() *Meta {
 }
 
 func (f *textField) ToInternalValue(value interface{}) error {
-	f.value = ""
+	f.InternalValue = ""
 	if value != nil {
 		switch v := value.(type) {
 		case string:
-			f.value = v
+			f.InternalValue = v
 		case []byte:
-			f.value = string(v)
+			f.InternalValue = string(v)
 		default:
 			return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
 		}
@@ -27,11 +27,11 @@ func (f *textField) ToInternalValue(value interface{}) error {
 }
 
 func (f textField) Internal() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f textField) ToRepresentation() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f *textField) Unmarshal(unmarshal func(interface{}) error) error {
@@ -39,7 +39,7 @@ func (f *textField) Unmarshal(unmarshal func(interface{}) error) error {
 		return nil
 	}
 
-	return unmarshal(&f.value)
+	return unmarshal(&f.InternalValue)
 }
 
 func (f textField) Marshal() interface{} {
@@ -50,7 +50,7 @@ func (f textField) Marshal() interface{} {
 }
 
 func (f *textField) UnmarshalParam(param string) error {
-	f.value = param
+	f.InternalValue = param
 	return nil
 }
 

@@ -4,13 +4,8 @@ import (
 	"fmt"
 )
 
-type textChoiceField struct {
-	options []string
-	TextField
-}
-
 type TextChoiceField struct {
-	options []string
+	Options []string
 	TextField
 }
 
@@ -19,7 +14,7 @@ func NewTextChoiceField(options []string, meta Meta) TextChoiceField {
 	meta.Validators = append([]FieldValidator{ValidateTextChoice(options)}, meta.Validators...)
 
 	return TextChoiceField{
-		options:   options,
+		Options:   options,
 		TextField: NewTextField(meta),
 	}
 }

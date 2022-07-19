@@ -51,7 +51,7 @@ func (b Bool) MarshalYAML() (interface{}, error) {
 }
 
 type booleanField struct {
-	value sql.NullBool
+	InternalValue sql.NullBool
 	Meta
 }
 
@@ -60,21 +60,21 @@ func (f *booleanField) MetaData() *Meta {
 }
 
 func (f *booleanField) ToInternalValue(value interface{}) error {
-	f.value = sql.NullBool{}
+	f.InternalValue = sql.NullBool{}
 	if value != nil {
 		switch v := value.(type) {
 		case bool:
-			f.value.Valid = true
-			f.value.Bool = v
+			f.InternalValue.Valid = true
+			f.InternalValue.Bool = v
 		case sql.NullBool:
-			f.value = v
+			f.InternalValue = v
 		case string:
 			b, err := strconv.ParseBool(v)
 			if err != nil {
 				return err
 			}
-			f.value.Valid = true
-			f.value.Bool = b
+			f.InternalValue.Valid = true
+			f.InternalValue.Bool = b
 		default:
 			return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
 		}
@@ -83,11 +83,11 @@ func (f *booleanField) ToInternalValue(value interface{}) error {
 }
 
 func (f booleanField) Internal() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f booleanField) ToRepresentation() interface{} {
-	return Bool(f.value)
+	return Bool(f.InternalValue)
 }
 
 func (f booleanField) Marshal() interface{} {
@@ -95,7 +95,8 @@ func (f booleanField) Marshal() interface{} {
 }
 
 func (f *booleanField) Unmarshal(unmarshal func(interface{}) error) error {
-	return unmarshal(&f.value)
+	v := Bool(f.InternalValue)
+	return unmarshal(&v)
 }
 
 type BooleanField struct {

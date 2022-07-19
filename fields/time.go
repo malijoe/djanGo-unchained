@@ -6,7 +6,7 @@ import (
 )
 
 type timeField struct {
-	value time.Time
+	InternalValue time.Time
 	Meta
 }
 
@@ -15,28 +15,28 @@ func (f *timeField) MetaData() *Meta {
 }
 
 func (f *timeField) ToInternalValue(value interface{}) error {
-	f.value = time.Time{}
+	f.InternalValue = time.Time{}
 	if value != nil {
 		v, ok := value.(time.Time)
 		if ok {
 			return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
 		}
-		f.value = v
+		f.InternalValue = v
 	}
 
 	return nil
 }
 
 func (f timeField) Internal() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f timeField) ToRepresentation() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f *timeField) Unmarshal(unmarshal func(interface{}) error) error {
-	if err := unmarshal(&f.value); err != nil {
+	if err := unmarshal(&f.InternalValue); err != nil {
 		return err
 	}
 

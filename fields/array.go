@@ -8,7 +8,7 @@ import (
 )
 
 type stringArrayField struct {
-	values pq.StringArray
+	InternalValue pq.StringArray
 	Meta
 }
 
@@ -17,15 +17,15 @@ func (f *stringArrayField) MetaData() *Meta {
 }
 
 func (f *stringArrayField) ToInternalValue(value interface{}) error {
-	f.values = pq.StringArray{}
+	f.InternalValue = pq.StringArray{}
 	if value != nil {
 		switch v := value.(type) {
 		case pq.StringArray:
-			f.values = v
+			f.InternalValue = v
 		case []string:
-			f.values = v
+			f.InternalValue = v
 		case []byte, string:
-			if err := f.values.Scan(value); err != nil {
+			if err := f.InternalValue.Scan(value); err != nil {
 				return err
 			}
 		default:
@@ -36,11 +36,11 @@ func (f *stringArrayField) ToInternalValue(value interface{}) error {
 }
 
 func (f stringArrayField) Internal() interface{} {
-	return f.values
+	return f.InternalValue
 }
 
 func (f stringArrayField) ToRepresentation() interface{} {
-	return []string(f.values)
+	return []string(f.InternalValue)
 }
 
 func (f stringArrayField) Marshal() interface{} {
@@ -48,7 +48,7 @@ func (f stringArrayField) Marshal() interface{} {
 }
 
 func (f *stringArrayField) Unmarshal(unmarshal func(interface{}) error) error {
-	return unmarshal(&f.values)
+	return unmarshal(&f.InternalValue)
 }
 
 type StringArrayField struct {
@@ -68,8 +68,8 @@ func NewStringArrayField(meta Meta) StringArrayField {
 }
 
 type objectArrayField struct {
-	values   []interface{}
-	elemType reflect.Type
+	InternalValue []interface{}
+	ElemType      reflect.Type
 	Meta
 }
 
@@ -78,10 +78,10 @@ func (f *objectArrayField) MetaData() *Meta {
 }
 
 func (f *objectArrayField) ToInternalValue(value interface{}) error {
-	f.values = []interface{}{}
+	f.InternalValue = []interface{}{}
 	if value != nil {
 		v := reflect.ValueOf(value)
-		if !(v.Kind() == reflect.Array || v.Kind() == reflect.Slice) || v.Type().Elem() != f.elemType {
+		if !(v.Kind() == reflect.Array || v.Kind() == reflect.Slice) || v.Type().Elem() != f.ElemType {
 			return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
 		}
 
@@ -90,14 +90,14 @@ func (f *objectArrayField) ToInternalValue(value interface{}) error {
 			obj := v.Index(i)
 			values[i] = obj.Interface()
 		}
-		f.values = values
+		f.InternalValue = values
 	}
 	return nil
 }
 
 func (f objectArrayField) Internal() interface{} {
-	sl := reflect.New(reflect.SliceOf(f.elemType)).Elem()
-	for _, v := range f.values {
+	sl := reflect.New(reflect.SliceOf(f.ElemType)).Elem()
+	for _, v := range f.InternalValue {
 		sl = reflect.Append(sl, reflect.ValueOf(v))
 	}
 
@@ -105,8 +105,8 @@ func (f objectArrayField) Internal() interface{} {
 }
 
 func (f objectArrayField) ToRepresentation() interface{} {
-	sl := reflect.New(reflect.SliceOf(f.elemType)).Elem()
-	for _, v := range f.values {
+	sl := reflect.New(reflect.SliceOf(f.ElemType)).Elem()
+	for _, v := range f.InternalValue {
 		sl = reflect.Append(sl, reflect.ValueOf(v))
 	}
 	return sl.Interface()
@@ -117,7 +117,7 @@ func (f objectArrayField) Marshal() interface{} {
 }
 
 func (f *objectArrayField) Unmarshal(unmarshal func(interface{}) error) error {
-	sl := reflect.New(reflect.SliceOf(f.elemType)).Interface()
+	sl := reflect.New(reflect.SliceOf(f.ElemType)).Interface()
 	if err := unmarshal(sl); err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ type ObjectArrayField struct {
 func NewObjectArrayField(elem interface{}, meta Meta) ObjectArrayField {
 	field := objectArrayField{
 		Meta:     meta,
-		elemType: reflect.TypeOf(elem),
+		ElemType: reflect.TypeOf(elem),
 	}
 	return ObjectArrayField{
 		objectArrayField: &field,

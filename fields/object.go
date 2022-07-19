@@ -6,8 +6,8 @@ import (
 )
 
 type objectField struct {
-	value   interface{}
-	objType reflect.Type
+	InternalValue interface{}
+	ObjType       reflect.Type
 	Meta
 }
 
@@ -16,24 +16,24 @@ func (f *objectField) MetaData() *Meta {
 }
 
 func (f *objectField) ToInternalValue(value interface{}) error {
-	f.value = reflect.Indirect(reflect.New(f.objType)).Interface()
+	f.InternalValue = reflect.Indirect(reflect.New(f.ObjType)).Interface()
 	if value != nil {
 		v := reflect.ValueOf(value)
-		if v.Type() != f.objType {
+		if v.Type() != f.ObjType {
 			return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
 		}
-		f.value = v.Interface()
+		f.InternalValue = v.Interface()
 	}
 
 	return nil
 }
 
 func (f objectField) Internal() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f objectField) ToRepresentation() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f objectField) Marshal() interface{} {
@@ -48,7 +48,7 @@ func (f *objectField) Unmarshal(unmarshal func(interface{}) error) error {
 		return nil
 	}
 
-	v := reflect.New(f.objType).Interface()
+	v := reflect.New(f.ObjType).Interface()
 	if err := unmarshal(v); err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ type ObjectField struct {
 func NewObjectField(objType interface{}, meta Meta) ObjectField {
 	field := objectField{
 		Meta:    meta,
-		objType: reflect.TypeOf(objType),
+		ObjType: reflect.TypeOf(objType),
 	}
 
 	return ObjectField{

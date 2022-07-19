@@ -8,7 +8,7 @@ import (
 )
 
 type integerField struct {
-	value int
+	InternalValue int
 	Meta
 }
 
@@ -19,24 +19,24 @@ func (f *integerField) MetaData() *Meta {
 func (f *integerField) ToInternalValue(value interface{}) error {
 	// TODO: add function to reset field value to it's default or zero value
 	// reset the internal value to avoid conflicts
-	f.value = 0
+	f.InternalValue = 0
 	if value != nil {
 		v, ok := utils.ParseInt(value)
 		if !ok {
 			return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
 		}
-		f.value = v
+		f.InternalValue = v
 	}
 
 	return nil
 }
 
 func (f integerField) ToRepresentation() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f integerField) Internal() interface{} {
-	return f.value
+	return f.InternalValue
 }
 
 func (f integerField) Marshal() interface{} {
@@ -44,7 +44,7 @@ func (f integerField) Marshal() interface{} {
 }
 
 func (f *integerField) Unmarshal(unmarshal func(interface{}) error) error {
-	return unmarshal(&f.value)
+	return unmarshal(&f.InternalValue)
 }
 
 func (f *integerField) UnmarshalParam(param string) error {
@@ -52,7 +52,7 @@ func (f *integerField) UnmarshalParam(param string) error {
 	if err != nil {
 		return err
 	}
-	f.value = value
+	f.InternalValue = value
 	return nil
 }
 
