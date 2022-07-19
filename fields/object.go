@@ -53,7 +53,7 @@ func (f *objectField) Unmarshal(unmarshal func(interface{}) error) error {
 		return err
 	}
 
-	v = reflect.Indirect(reflect.ValueOf(v))
+	v = reflect.Indirect(reflect.ValueOf(v)).Interface()
 	return f.ToInternalValue(v)
 }
 
