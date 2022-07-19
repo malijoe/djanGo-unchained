@@ -18,7 +18,7 @@ func (f *timeField) ToInternalValue(value interface{}) error {
 	f.InternalValue = time.Time{}
 	if value != nil {
 		v, ok := value.(time.Time)
-		if ok {
+		if !ok {
 			return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
 		}
 		f.InternalValue = v
