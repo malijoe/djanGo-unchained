@@ -74,11 +74,9 @@ func TestModel(t *testing.T) {
 		},
 		"field_4": {
 			ShouldFind: true,
-			ExpectedValue: fields.Bool{
-				NullBool: sql.NullBool{
-					Valid: true,
-					Bool:  true,
-				},
+			ExpectedValue: sql.NullBool{
+				Valid: true,
+				Bool:  true,
 			},
 		},
 	}
