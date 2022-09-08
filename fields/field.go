@@ -1,144 +1,78 @@
 package fields
 
 import (
-	"database/sql"
-	"database/sql/driver"
-	"encoding/json"
-	"fmt"
+	"errors"
 	"reflect"
-	"time"
-
-	"github.com/hashicorp/go-multierror"
-	"github.com/lib/pq"
 )
 
-type Internalizable interface {
-	ToInternalValue(interface{}) error
-	Internal() interface{}
-}
+var (
+	SkipField     = errors.New("skip field")
+	Required      = errors.New("required")
+	InvalidParent = errors.New("invalid parent")
+)
 
-type Representable interface {
-	ToRepresentation() interface{}
-}
-
-type field interface {
-	Internalizable
-	Representable
-	MetaData() *Meta
-}
-
-type Descriptor[T any] Field[T]
+// Empty used to represent no data being provided for a given value
+// This is required because nil may be a valid value
+type Empty any
 
 type Field[T any] struct {
-	InternalValue    T                      `json:"-"`
-	Default          T                      `json:"default"`
-	ReadOnly         bool                   `json:"read_only"`
-	WriteOnly        bool                   `json:"write_only"`
-	Required         bool                   `json:"required"`
-	AllowNull        bool                   `json:"allow_null"`
-	AllowBlank       bool                   `json:"allow_blank"`
-	Source           string                 `json:"source"`
-	Label            string                 `json:"label"`
-	HelpText         string                 `json:"help_text"`
-	Type             FieldType              `json:"type"`
-	PlaceHolder      string                 `json:"place_holder"`
-	DependantFields  []string               `json:"dependant_fields"`
-	Validators       []func(Field[T]) error `json:"-"`
-	ToRepresentation func(T) interface{}    `json:"-"`
+	ReadOnly, WriteOnly, Required bool
+	Default, Initial              T
+	Label, HelpText               string
+	AllowNull                     bool
+	_Validators                   []func(T) error
+	FieldName                     string
+	Source                        string
+	value                         *T
+	Parent                        any
 }
 
-func (f *Field[T]) Unmarshal(unmarshal func(interface{}) error) error {
-	if f.WriteOnly {
-		return nil
+func (f *Field[T]) Bind(field_name string, parent any) error {
+	if reflect.Indirect(reflect.ValueOf(parent)).Kind() != reflect.Struct {
+		return InvalidParent
 	}
-
-	if err := unmarshal(&f.InternalValue); err != nil {
-		return err
+	f.Parent = parent
+	f.FieldName = field_name
+	if f.Source == "" {
+		f.Source = f.FieldName
 	}
-
-	isZero := reflect.ValueOf(f.InternalValue).IsZero()
-	if isZero {
-		var zero T
-		if reflect.DeepEqual(zero, f.Default) {
-			if !(f.AllowNull) || f.AllowBlank {
-				return NewFieldError(f.Source, ErrorNullNotAllowed)
-			}
-		} else {
-			f.InternalValue = f.Default
-		}
-	}
-
-	var errs error
-	for _, validator := range f.Validators {
-		if err := validator(*f); err != nil {
-			errs = multierror.Append(errs, err)
-		}
-	}
-
-	return errs
-}
-
-func (f *Field[T]) Marshal() interface{} {
-	if f.WriteOnly {
-		return nil
-	}
-	if f.ToRepresentation != nil {
-		return f.ToRepresentation(f.InternalValue)
-	}
-
-	return f.InternalValue
-}
-
-func (f *Field[T]) UnmarshalJSON(data []byte) error {
-	unmarshal := func(i interface{}) error {
-		return json.Unmarshal(data, i)
-	}
-	return f.Unmarshal(unmarshal)
-}
-
-func (f Field[T]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(f.Marshal())
-}
-
-func (f *Field[T]) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	return f.Unmarshal(unmarshal)
-}
-
-func (f Field[T]) MarshalYAML() (interface{}, error) {
-	return f.Marshal(), nil
-}
-
-func (f Field[T]) Scan(value interface{}) error {
-	if scanner, ok := any(f.InternalValue).(sql.Scanner); ok {
-		return scanner.Scan(value)
-	}
-
-	v, ok := value.(T)
-	if !ok {
-		return NewFieldError(f.Source, fmt.Errorf("%w %v %T", ErrorInvalidValue, value, value))
-	}
-
-	f.InternalValue = v
 	return nil
 }
 
-func (f Field[T]) Value() (driver.Value, error) {
-	if valuer, ok := any(f.InternalValue).(driver.Valuer); ok {
-		return valuer.Value()
+func (f *Field[T]) Validators() []func(T) error {
+	return f._Validators
+}
+
+// GetValue given the incoming primitive data, return the value for this field that should be validated and transformed
+// to a native value
+func (f *Field[T]) GetValue(dictionary map[string]any) any {
+	return dictionary[f.FieldName]
+}
+
+func (f *Field[T]) GetDefault() (T, error) {
+	var zero T
+	if reflect.ValueOf(f.Default).IsZero() {
+		return zero, SkipField
 	}
-
-	return f.InternalValue, nil
+	return f.Default, nil
 }
 
-type ChoiceField[T any] struct {
-	Options []T
-	Field[T]
+func (f *Field[T]) Unmarshal(unmarshal func(any) error) error {
+	if f.Parent == nil {
+		panic("unmarshalling unbound field")
+	}
+	if f.ReadOnly {
+		return nil
+	}
+	if err := unmarshal(f.Parent); err != nil {
+		return err
+	}
+	return nil
 }
 
-type TextField = Field[string]
-type IntegerField = Field[int]
-type BooleanField = Field[sql.NullBool]
-type TimeField = Field[time.Time]
-type TextChoiceField = ChoiceField[string]
-type IntegerChoiceField = ChoiceField[int]
-type TextArrayField = Field[pq.StringArray]
+func (f *Field[T]) Marshal() any {
+	if f.WriteOnly {
+		return nil
+	}
+	return *f.value
+}
