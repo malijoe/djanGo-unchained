@@ -1,9 +1,8 @@
-package permissions
+package django
 
 import (
 	"net/http"
 
-	django "github.com/malijoe/djanGo-unchained"
 	"golang.org/x/exp/slices"
 )
 
@@ -15,15 +14,15 @@ var (
 	}
 )
 
-type Class interface {
+type PermissionClass interface {
 	// HasPermission return true if permission is granted, false otherwise.
-	HasPermission(request *django.Request) bool
+	HasPermission(request *Request) bool
 }
 
 // BasePermission a base struct from which all permission classes should be composed.
 type BasePermission struct{}
 
-func (p BasePermission) HasPermission(request *django.Request) bool {
+func (p BasePermission) HasPermission(request *Request) bool {
 	return true
 }
 
@@ -31,7 +30,7 @@ type AllowAny struct {
 	BasePermission
 }
 
-func (p AllowAny) HasPermission(request *django.Request) bool {
+func (p AllowAny) HasPermission(request *Request) bool {
 	return true
 }
 
@@ -39,7 +38,7 @@ type IsAuthenticated struct {
 	BasePermission
 }
 
-func (p IsAuthenticated) HasPermission(request *django.Request) bool {
+func (p IsAuthenticated) HasPermission(request *Request) bool {
 	return request.User != nil && request.User.IsAuthenticated()
 }
 
@@ -47,7 +46,7 @@ type IsAdminUser struct {
 	BasePermission
 }
 
-func (p IsAdminUser) HasPermission(request *django.Request) bool {
+func (p IsAdminUser) HasPermission(request *Request) bool {
 	return request.User != nil && request.User.IsAdmin()
 }
 
@@ -55,6 +54,6 @@ type IsAuthenticatedOrReadOnly struct {
 	BasePermission
 }
 
-func (p IsAuthenticatedOrReadOnly) HasPermission(request *django.Request) bool {
+func (p IsAuthenticatedOrReadOnly) HasPermission(request *Request) bool {
 	return slices.Contains(SAFE_METHODS, request.Method) || (request.User != nil && request.User.IsAuthenticated())
 }
