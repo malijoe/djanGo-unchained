@@ -1,4 +1,4 @@
-package django
+package db
 
 import (
 	"fmt"
@@ -17,6 +17,7 @@ type compositeSpecification struct {
 
 func (s compositeSpecification) Query() string {
 	queries := make([]string, len(s.specifications))
+
 	for i, spec := range s.specifications {
 		queries[i] = spec.Query()
 	}
@@ -55,7 +56,7 @@ func (s notSpecification) Query() string {
 
 func Not(specification Specification) Specification {
 	return notSpecification{
-		specification,
+		Specification: specification,
 	}
 }
 
@@ -89,7 +90,7 @@ func (s invertedBinaryOperatorSpecification[T]) Query() string {
 	return fmt.Sprintf("? %s %s", s.operator, s.field)
 }
 
-func EqualInverted[T any](field string, value T) Specification {
+func InvertedEqual[T any](field string, value T) Specification {
 	return invertedBinaryOperatorSpecification[T]{
 		binaryOperatorSpecification[T]{
 			field:    field,
@@ -133,4 +134,13 @@ func QueryString(query Specification) string {
 		queryString = fmt.Sprintf("%s %v", query.Query(), query.Values())
 	}
 	return queryString
+}
+
+type SpecificationMerger func(...Specification) Specification
+
+func MergeSpecification(init, spec Specification, merger SpecificationMerger) Specification {
+	if init == nil {
+		return spec
+	}
+	return merger(init, spec)
 }

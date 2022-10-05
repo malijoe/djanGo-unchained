@@ -19,6 +19,44 @@ type PermissionClass interface {
 	HasPermission(request *Request) bool
 }
 
+type and struct {
+	permissions []PermissionClass
+}
+
+func (p and) HasPermission(request *Request) bool {
+	for _, permission := range p.permissions {
+		if ok := permission.HasPermission(request); !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func And(permissions ...PermissionClass) PermissionClass {
+	return and{
+		permissions: permissions,
+	}
+}
+
+type or struct {
+	permissions []PermissionClass
+}
+
+func (p or) HasPermission(request *Request) bool {
+	for _, permission := range p.permissions {
+		if ok := permission.HasPermission(request); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func Or(permissions ...PermissionClass) PermissionClass {
+	return or{
+		permissions: permissions,
+	}
+}
+
 // BasePermission a base struct from which all permission classes should be composed.
 type BasePermission struct{}
 

@@ -3,10 +3,10 @@ package django
 import "net/http"
 
 type Request struct {
-	User *User
-	Auth string
+	User           User
+	Authenticators []AuthenticationClass
+	Auth           string
 	*http.Request
-	http.ResponseWriter
 }
 
 func (r *Request) Session() {
