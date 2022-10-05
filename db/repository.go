@@ -15,7 +15,7 @@ type InsertModifier interface {
 }
 
 type DTO[E any] interface {
-	FromEntity(e E)
+	FromEntity(e E) any
 	ToEntity() E
 }
 
@@ -58,7 +58,7 @@ func newBaseRepository[D DTO[E], E any](conn conn) BaseRepository[E] {
 
 func (r *baseRepository[D, E]) Save(ctx context.Context, e E) (*E, error) {
 	var dto D
-	dto.FromEntity(e)
+	dto = dto.FromEntity(e).(D)
 
 	stmt := r.db.NewInsert().Model(&dto).Returning("id")
 	if inserter, ok := any(dto).(InsertModifier); ok {
@@ -102,7 +102,7 @@ func (r *baseRepository[D, E]) Find(ctx context.Context, query Specification) ([
 
 func (r *baseRepository[D, E]) Update(ctx context.Context, e E) (*E, error) {
 	var dto D
-	dto.FromEntity(e)
+	dto = dto.FromEntity(e).(D)
 
 	stmt := r.db.NewUpdate().Model(&dto).OmitZero().WherePK()
 
