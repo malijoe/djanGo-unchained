@@ -12,7 +12,7 @@ import (
 var (
 	cache  = make(map[uint]testType)
 	lastId uint
-	repo   = db.NewMockRepository[testType](
+	repo   = db.NewMockRepository(
 		db.WithGetFn(func(id uint) (*testType, error) {
 			t, ok := cache[id]
 			if !ok {

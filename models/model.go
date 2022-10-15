@@ -9,8 +9,8 @@ import (
 type DataModel[T any] interface {
 	Instance() *T
 	Save(ctx context.Context) (*T, error)
-	Create(ctx context.Context) (*T, error)
-	Update(ctx context.Context) (*T, error)
+	Create(ctx context.Context, opts ...db.SaveOption) (*T, error)
+	Update(ctx context.Context, opts ...db.UpdateOption) (*T, error)
 	Find(ctx context.Context, query db.Specification) ([]T, error)
 	Get(ctx context.Context, id uint) (*T, error)
 	Delete(ctx context.Context, id uint) error
@@ -40,22 +40,22 @@ func (m *dataModel[T, R]) Save(ctx context.Context) (*T, error) {
 	panic("save method not implemented")
 }
 
-func (m *dataModel[T, R]) Create(ctx context.Context) (*T, error) {
+func (m *dataModel[T, R]) Create(ctx context.Context, opts ...db.SaveOption) (*T, error) {
 	return m.repo.Save(ctx, *m.instance)
 }
 
-func (m *dataModel[T, R]) Update(ctx context.Context) (*T, error) {
+func (m *dataModel[T, R]) Update(ctx context.Context, opts ...db.UpdateOption) (*T, error) {
 	return m.repo.Update(ctx, *m.instance)
 }
 
 func (m *dataModel[T, R]) Get(ctx context.Context, id uint) (*T, error) {
-	return m.repo.Get(ctx, id)
+	return m.repo.Get(ctx, db.WithSelectCondition(db.Equal("id", id)))
 }
 
 func (m *dataModel[T, R]) Find(ctx context.Context, query db.Specification) ([]T, error) {
-	return m.repo.Find(ctx, query)
+	return m.repo.Find(ctx, db.WithSelectCondition(query))
 }
 
 func (m *dataModel[T, R]) Delete(ctx context.Context, id uint) error {
-	return m.repo.Delete(ctx, id)
+	return m.repo.Delete(ctx, db.WithDeleteCondition(db.Equal("id", id)))
 }
