@@ -20,11 +20,11 @@ type DTO[E any] interface {
 }
 
 type BaseRepository[T any] interface {
-	Save(ctx context.Context, t T, opts ...SaveOption) (*T, error)
-	Get(ctx context.Context, opts ...SelectOption) (*T, error)
-	Find(ctx context.Context, opts ...SelectOption) ([]T, error)
-	Update(ctx context.Context, t T, opts ...UpdateOption) (*T, error)
-	Delete(ctx context.Context, opts ...DeleteOption) error
+	Save(ctx context.Context, t T) (*T, error)
+	Get(ctx context.Context, id uint) (*T, error)
+	Find(ctx context.Context, query Specification) ([]T, error)
+	Update(ctx context.Context, t T) (*T, error)
+	Delete(ctx context.Context, id uint) error
 }
 
 type Repository[T any] interface {
@@ -56,11 +56,11 @@ func newBaseRepository[D DTO[E], E any](conn conn) BaseRepository[E] {
 	}
 }
 
-func (r *baseRepository[D, E]) Save(ctx context.Context, e E, opts ...SaveOption) (*E, error) {
+func (r *baseRepository[D, E]) Save(ctx context.Context, e E) (*E, error) {
 	var dto D
 	dto = dto.FromEntity(e).(D)
 
-	stmt := r.db.NewInsert().Model(&dto)
+	stmt := r.db.NewInsert().Model(&dto).Returning("id")
 	if inserter, ok := any(dto).(InsertModifier); ok {
 		stmt = inserter.OnInsert(stmt)
 	}
@@ -72,12 +72,9 @@ func (r *baseRepository[D, E]) Save(ctx context.Context, e E, opts ...SaveOption
 	return &entity, nil
 }
 
-func (r *baseRepository[D, E]) Get(ctx context.Context, opts ...SelectOption) (*E, error) {
+func (r *baseRepository[D, E]) Get(ctx context.Context, id uint) (*E, error) {
 	var dto D
-	stmt := r.db.NewSelect().Model(&dto)
-	for _, op := range opts {
-		op(stmt)
-	}
+	stmt := r.db.NewSelect().Model(&dto).Where("id = ?", id)
 	if err := stmt.Scan(ctx); err != nil {
 		return nil, err
 	}
@@ -85,11 +82,11 @@ func (r *baseRepository[D, E]) Get(ctx context.Context, opts ...SelectOption) (*
 	return &entity, nil
 }
 
-func (r *baseRepository[D, E]) Find(ctx context.Context, opts ...SelectOption) ([]E, error) {
+func (r *baseRepository[D, E]) Find(ctx context.Context, query Specification) ([]E, error) {
 	var dto []D
 	stmt := r.db.NewSelect().Model(&dto)
-	for _, op := range opts {
-		op(stmt)
+	if query != nil {
+		stmt = stmt.Where(query.Query(), query.Values()...)
 	}
 
 	if err := stmt.Scan(ctx); err != nil {
@@ -103,14 +100,12 @@ func (r *baseRepository[D, E]) Find(ctx context.Context, opts ...SelectOption) (
 	return response, nil
 }
 
-func (r *baseRepository[D, E]) Update(ctx context.Context, e E, opts ...UpdateOption) (*E, error) {
+func (r *baseRepository[D, E]) Update(ctx context.Context, e E) (*E, error) {
 	var dto D
 	dto = dto.FromEntity(e).(D)
 
 	stmt := r.db.NewUpdate().Model(&dto).OmitZero().WherePK()
-	for _, op := range opts {
-		op(stmt)
-	}
+
 	_, err := stmt.Exec(ctx)
 	if err != nil {
 		return nil, err
@@ -120,12 +115,9 @@ func (r *baseRepository[D, E]) Update(ctx context.Context, e E, opts ...UpdateOp
 	return &entity, nil
 }
 
-func (r *baseRepository[D, E]) Delete(ctx context.Context, opts ...DeleteOption) error {
+func (r *baseRepository[D, E]) Delete(ctx context.Context, id uint) error {
 	var dto D
-	stmt := r.db.NewDelete().Model(&dto)
-	for _, op := range opts {
-		op(stmt)
-	}
+	stmt := r.db.NewDelete().Model(&dto).Where("id = ?", id)
 	_, err := stmt.Exec(ctx)
 	if err != nil {
 		return err
