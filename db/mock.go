@@ -85,7 +85,7 @@ func (r *MockRepository[T]) Rollback() error {
 	return nil
 }
 
-func (r *MockRepository[T]) Save(_ context.Context, t T, _ ...SaveOption) (*T, error) {
+func (r *MockRepository[T]) Save(_ context.Context, t T) (*T, error) {
 	r.SaveInvoked = true
 	if r.saveFn != nil {
 		return r.saveFn(&t)
@@ -93,15 +93,15 @@ func (r *MockRepository[T]) Save(_ context.Context, t T, _ ...SaveOption) (*T, e
 	return &t, nil
 }
 
-func (r *MockRepository[T]) Get(_ context.Context, _ ...SelectOption) (*T, error) {
+func (r *MockRepository[T]) Get(_ context.Context, id uint) (*T, error) {
 	r.GetInvoked = true
 	if r.getFn != nil {
-		return r.getFn(0)
+		return r.getFn(id)
 	}
 	return nil, nil
 }
 
-func (r *MockRepository[T]) Find(_ context.Context, _ ...SelectOption) ([]T, error) {
+func (r *MockRepository[T]) Find(_ context.Context, query Specification) ([]T, error) {
 	r.FindInvoked = true
 	if r.findFn != nil {
 		return r.findFn(nil)
@@ -109,7 +109,7 @@ func (r *MockRepository[T]) Find(_ context.Context, _ ...SelectOption) ([]T, err
 	return nil, nil
 }
 
-func (r *MockRepository[T]) Update(_ context.Context, t T, _ ...UpdateOption) (*T, error) {
+func (r *MockRepository[T]) Update(_ context.Context, t T) (*T, error) {
 	r.UpdateInvoked = true
 	if r.updateFn != nil {
 		return r.updateFn(&t)
@@ -117,10 +117,10 @@ func (r *MockRepository[T]) Update(_ context.Context, t T, _ ...UpdateOption) (*
 	return &t, nil
 }
 
-func (r *MockRepository[T]) Delete(_ context.Context, opts ...DeleteOption) error {
+func (r *MockRepository[T]) Delete(_ context.Context, id uint) error {
 	r.DeleteInvoked = true
 	if r.deleteFn != nil {
-		return r.deleteFn(0)
+		return r.deleteFn(id)
 	}
 	return nil
 }
